@@ -24,6 +24,7 @@ def main():
 
 def wrap_captions(filename, suffix, threshold, preview, encoding):
     results = []
+    # https://stackoverflow.com/a/50872028/1938012
     with io.open(filename, 'r', encoding=encoding) as f:
         lines = f.readlines()
         for line in lines:
