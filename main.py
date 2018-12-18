@@ -1,42 +1,48 @@
 import io
-import in_place
+import os
 import argparse
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs='+', type=str, help="files to process.")
-    parser.add_argument("-b", "--backup", default='.bak', help="backup file extension.")
+    parser.add_argument("-s", "--suffix", default='wrapped', help="suffix for res files.")
     parser.add_argument("-t", "--threshold", type=int, default=55, help="maximum characters per line.")
     parser.add_argument("-p", "--preview", action="store_true", help="preview result without modifying the file.")
     parser.add_argument("--encoding", default="utf-8", help="encoding of the files.")
 
     args = parser.parse_args()
-    bak = args.backup
+    suffix = args.suffix
     threshold = args.threshold
     preview = args.preview
     files = args.files
     encoding = args.encoding
 
     for f in files:
-        print('-'*10)
-        print(f)
-        print('-'*10)
-        wrap_captions(f, bak, threshold, preview, encoding)
+        wrap_captions(f, suffix, threshold, preview, encoding)
 
 
-def wrap_captions(filename, bak, threshold, preview, encoding):
+def wrap_captions(filename, suffix, threshold, preview, encoding):
+    results = []
+    with io.open(filename, 'r', encoding=encoding) as f:
+        lines = f.readlines()
+        for line in lines:
+            res = process_line(line, threshold)
+            results.append(res)
+    new_contents = u"\n".join(results)
     if preview:
-        with io.open(filename, 'r', encoding=encoding) as f:
-            for line in f:
-                output = process_line(line, threshold)
-                print(output)
+        print('-'*10)
+        print(filename)
+        print('-'*10)
+        print(new_contents)
     else:
-        with in_place.InPlace(filename, backup_ext=bak, encoding=encoding) as f:
-            for line in f:
-                output = process_line(line, threshold)
-                f.write(u"{}\n".format(output))
+        new_filename = gen_filename(filename, suffix)
+        print(u"{0} --> {1}".format(filename, new_filename))
+        with io.open(new_filename, 'w', encoding=encoding) as fo:
+            fo.write(new_contents)
 
+def gen_filename(filename, suffix):
+    return u"{0}.{2}{1}".format(*os.path.splitext(filename) + (suffix,))
 
 def process_line(line, threshold):
     line = line.strip()
@@ -52,16 +58,10 @@ def process_line(line, threshold):
             else:
                 back.append(item)
             count += 1
-        output = u"{}\n{}".format(" ".join(front), " ".join(back))
+        res = u"{0}\n{1}".format(u" ".join(front), u" ".join(back))
     else:
-        output = line
-    return output
-
-
-def test(filename, bak='.bak'):
-    with in_place.InPlace(filename, backup_ext=bak) as f:
-        for line in f:
-            f.write("{}\n{}".format(line,line))
+        res = line
+    return res
 
 
 if __name__ == '__main__':

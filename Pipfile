@@ -1,12 +1,11 @@
 [[source]]
 url = "https://pypi.org/simple"
-name = "pypi"
 verify_ssl = true
+name = "pypi"
 
 [requires]
-python_version = "2.7"
-
-[dev-packages]
+python_version = "3.5"
 
 [packages]
-in-place = "*"
+
+[dev-packages]
